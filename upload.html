@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sell on AH SHOPPING</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="logo" onclick="location.href='index.html'" style="cursor:pointer">AH SHOPPING</div>
+        <div class="user-profile">Seller Dashboard</div>
+    </header>
+
+    <main class="upload-container">
+        <div class="form-card">
+            <h2>List Your Item for Auction</h2>
+            <form id="uploadForm">
+                <label>Product Image (Required)</label>
+                <input type="file" id="prodImage" accept="image/*" required>
+
+                <label>Product Name</label>
+                <input type="text" id="prodName" placeholder="e.g. Rare Fossil Watch" required>
+
+                <label>Starting Bid (INR ₹)</label>
+                <input type="number" id="prodPrice" placeholder="Enter amount in ₹" required>
+
+                <label>Category</label>
+                <select id="prodCategory">
+                    <option value="Electronics">Electronics</option>
+                    <option value="Collectibles">Collectibles</option>
+                    <option value="Fashion">Fashion</option>
+                </select>
+
+                <label>Description</label>
+                <textarea id="prodDesc" rows="4" placeholder="Describe the item condition..."></textarea>
+
+                <button type="submit" class="submit-btn">Launch Auction</button>
+            </form>
+        </div>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>

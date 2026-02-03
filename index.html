@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AH SHOPPING | Bid & Win</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">AH SHOPPING</div>
+        
+        <div class="search-container">
+            <input type="text" placeholder="Search for auctions..." id="searchBar">
+            <select id="filterCategory">
+                <option value="all">All Categories</option>
+                <option value="electronics">Electronics</option>
+                <option value="collectibles">Collectibles</option>
+                <option value="fashion">Fashion</option>
+            </select>
+            <button type="submit">Search</button>
+        </div>
+        <nav>
+            <button onclick="location.href='upload.html'">Sell Item</button>
+            <div class="user-profile">Profile</div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>India's Premier Bidding Hub</h1>
+            <p>All values displayed in <strong>INR (₹)</strong></p>
+        </section>
+
+        <div id="productGrid" class="grid-container">
+            <p class="empty-msg">No active auctions. Be the first to upload a product!</p>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
