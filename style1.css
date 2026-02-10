@@ -1,0 +1,270 @@
+/* --- 1. GLOBAL THEME & BACKGROUND --- */
+body {
+    /* Fixed dark radial gradient for depth */
+    background: radial-gradient(circle at center, #2b2b2b 0%, #111111 100%);
+    background-attachment: fixed;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+    margin: 0; 
+    color: #ffffff;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* --- 2. HOLOGRAPHIC HEADER --- */
+header {
+    background: rgba(17, 17, 17, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(42, 221, 241, 0.3);
+    padding: 1rem 5%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.logo { 
+    font-size: 1.6rem; 
+    font-weight: bold; 
+    color: #2addef; 
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(42, 221, 241, 0.5);
+    cursor: pointer;
+    text-decoration: none;
+}
+
+/* --- 3. CYBERPUNK SEARCH INTERFACE --- */
+.search-container {
+    display: flex;
+    flex-grow: 1;
+    justify-content: center;
+    max-width: 700px;
+    margin: 0 20px;
+}
+
+.search-container input, 
+.search-container select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(42, 221, 241, 0.2);
+    padding: 12px;
+    color: white;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.search-container input { 
+    width: 50%; 
+    border-radius: 8px 0 0 8px; 
+}
+
+.search-container select { 
+    border-left: none;
+    cursor: pointer;
+}
+
+.search-container input:focus, 
+.search-container select:focus {
+    background: rgba(42, 221, 241, 0.1);
+    border-color: rgba(42, 221, 241, 0.8);
+    box-shadow: 0 0 15px rgba(42, 221, 241, 0.3);
+}
+
+.search-container button {
+    padding: 10px 25px;
+    background: #2addef;
+    border: none;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+    font-weight: bold;
+    color: #111;
+    transition: all 0.3s ease;
+}
+
+.search-container button:hover {
+    background: #ffffff;
+    box-shadow: 0 0 20px rgba(42, 221, 241, 0.6);
+}
+
+/* --- 4. GLASSMORPHIC CARDS --- */
+.product-card, .form-card {
+    background: rgba(43, 43, 43, 0.7); 
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid rgba(42, 221, 241, 0.3); 
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-align: center;
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+}
+
+.product-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    border-color: rgba(42, 221, 241, 0.8);
+    box-shadow: 0 0 25px rgba(42, 221, 241, 0.4);
+}
+
+/* --- 5. IMAGE HUD DISPLAY --- */
+.image-wrapper {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    background: #000;
+}
+
+.product-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; 
+    opacity: 0.85;
+    filter: brightness(1.1) contrast(1.1);
+    border-bottom: 2px solid #b11313; /* Red accent stripe */
+    transition: transform 0.5s ease, opacity 0.3s ease;
+}
+
+.product-card:hover img {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+/* --- 6. PRODUCT INFO & HUD ELEMENTS --- */
+.price-tag { 
+    color: #2addef; 
+    font-weight: bold; 
+    font-size: 1.6rem; 
+    margin: 10px 0;
+    text-shadow: 0 0 10px rgba(42, 221, 241, 0.5);
+}
+
+.timer {
+    background: rgba(177, 19, 19, 0.15); 
+    border: 1px solid rgba(177, 19, 19, 0.4);
+    color: #ff4d4d;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    display: inline-block;
+    margin-bottom: 15px;
+}
+
+/* --- 7. BUTTONS (ARC REACTOR STYLE) --- */
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.bid-btn {
+    background: #2addef;
+    color: #111;
+    border: none;
+    font-weight: 900;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 0 15px rgba(42, 221, 241, 0.3);
+    transition: all 0.3s ease;
+}
+
+.bid-btn:hover {
+    background: #ffffff;
+    box-shadow: 0 0 25px rgba(42, 221, 241, 0.7);
+}
+
+/* --- 8. THE HOLOGRAPHIC SELL BUTTON (SUBMIT) --- */
+.submit-btn { 
+    width: 100%; 
+    margin-top: 30px; 
+    padding: 15px; 
+    background: #2addef; /* Cyan Glow */
+    color: #111;
+    border: none;
+    border-radius: 8px;
+    font-weight: 900; 
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer; 
+    
+    /* Neon Glow Effect */
+    box-shadow: 0 0 15px rgba(42, 221, 241, 0.4);
+    
+    /* Pulsing Animation */
+    animation: pulse-glow 2s infinite;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 10px rgba(42, 221, 241, 0.4); }
+    50% { box-shadow: 0 0 25px rgba(42, 221, 241, 0.7); }
+    100% { box-shadow: 0 0 10px rgba(42, 221, 241, 0.4); }
+}
+
+.submit-btn:hover {
+    background: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(42, 221, 241, 0.8);
+}
+
+.submit-btn:active {
+    transform: scale(0.96);
+}
+
+/* --- 9. UPLOAD FORM UI --- */
+.upload-container { 
+    display: flex; 
+    justify-content: center; 
+    padding: 50px 20px; 
+}
+
+.form-card label {
+    display: block;
+    text-align: left;
+    margin-top: 15px;
+    font-weight: 600;
+    color: #2addef;
+}
+
+.form-card input, 
+.form-card select, 
+.form-card textarea {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border: 1px solid rgba(42, 221, 241, 0.3);
+    margin-bottom: 10px;
+    width: 100%;
+    padding: 12px;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+.form-card option {
+    background: #2b2b2b;
+    color: white;
+}
+
+/* --- 10. GRID CONFIG --- */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 35px;
+    padding: 40px 5%;
+}
+
+.empty-msg {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 60px;
+    color: rgba(42, 221, 241, 0.6);
+}
