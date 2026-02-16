@@ -1,6 +1,4 @@
-/* --- 1. GLOBAL THEME & BACKGROUND --- */
 body {
-    /* Fixed dark radial gradient for depth */
     background: radial-gradient(circle at center, #2b2b2b 0%, #111111 100%);
     background-attachment: fixed;
     font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
@@ -9,8 +7,6 @@ body {
     line-height: 1.6;
     overflow-x: hidden;
 }
-
-/* --- 2. HOLOGRAPHIC HEADER --- */
 header {
     background: rgba(17, 17, 17, 0.85);
     backdrop-filter: blur(12px);
@@ -24,7 +20,6 @@ header {
     top: 0;
     z-index: 1000;
 }
-
 .logo { 
     font-size: 1.6rem; 
     font-weight: bold; 
@@ -35,8 +30,6 @@ header {
     cursor: pointer;
     text-decoration: none;
 }
-
-/* --- 3. CYBERPUNK SEARCH INTERFACE --- */
 .search-container {
     display: flex;
     flex-grow: 1;
@@ -44,7 +37,6 @@ header {
     max-width: 700px;
     margin: 0 20px;
 }
-
 .search-container input, 
 .search-container select {
     background: rgba(255, 255, 255, 0.05);
@@ -54,24 +46,20 @@ header {
     outline: none;
     transition: all 0.3s ease;
 }
-
 .search-container input { 
     width: 50%; 
     border-radius: 8px 0 0 8px; 
 }
-
 .search-container select { 
     border-left: none;
     cursor: pointer;
 }
-
 .search-container input:focus, 
 .search-container select:focus {
     background: rgba(42, 221, 241, 0.1);
     border-color: rgba(42, 221, 241, 0.8);
     box-shadow: 0 0 15px rgba(42, 221, 241, 0.3);
 }
-
 .search-container button {
     padding: 10px 25px;
     background: #2addef;
@@ -82,13 +70,10 @@ header {
     color: #111;
     transition: all 0.3s ease;
 }
-
 .search-container button:hover {
     background: #ffffff;
     box-shadow: 0 0 20px rgba(42, 221, 241, 0.6);
 }
-
-/* --- 4. GLASSMORPHIC CARDS --- */
 .product-card, .form-card {
     background: rgba(43, 43, 43, 0.7); 
     backdrop-filter: blur(10px);
@@ -103,14 +88,11 @@ header {
     position: relative;
     overflow: hidden;
 }
-
 .product-card:hover {
     transform: translateY(-10px) scale(1.02);
     border-color: rgba(42, 221, 241, 0.8);
     box-shadow: 0 0 25px rgba(42, 221, 241, 0.4);
 }
-
-/* --- 5. IMAGE HUD DISPLAY --- */
 .image-wrapper {
     width: 100%;
     height: 200px;
@@ -119,7 +101,6 @@ header {
     margin-bottom: 15px;
     background: #000;
 }
-
 .product-card img {
     width: 100%;
     height: 100%;
@@ -129,13 +110,10 @@ header {
     border-bottom: 2px solid #b11313; /* Red accent stripe */
     transition: transform 0.5s ease, opacity 0.3s ease;
 }
-
 .product-card:hover img {
     transform: scale(1.1);
     opacity: 1;
 }
-
-/* --- 6. PRODUCT INFO & HUD ELEMENTS --- */
 .price-tag { 
     color: #2addef; 
     font-weight: bold; 
@@ -143,7 +121,6 @@ header {
     margin: 10px 0;
     text-shadow: 0 0 10px rgba(42, 221, 241, 0.5);
 }
-
 .timer {
     background: rgba(177, 19, 19, 0.15); 
     border: 1px solid rgba(177, 19, 19, 0.4);
@@ -155,14 +132,11 @@ header {
     display: inline-block;
     margin-bottom: 15px;
 }
-
-/* --- 7. BUTTONS (ARC REACTOR STYLE) --- */
 .button-group {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
-
 .bid-btn {
     background: #2addef;
     color: #111;
@@ -176,13 +150,10 @@ header {
     box-shadow: 0 0 15px rgba(42, 221, 241, 0.3);
     transition: all 0.3s ease;
 }
-
 .bid-btn:hover {
     background: #ffffff;
     box-shadow: 0 0 25px rgba(42, 221, 241, 0.7);
 }
-
-/* --- 8. THE HOLOGRAPHIC SELL BUTTON (SUBMIT) --- */
 .submit-btn { 
     width: 100%; 
     margin-top: 30px; 
@@ -196,38 +167,28 @@ header {
     text-transform: uppercase;
     letter-spacing: 2px;
     cursor: pointer; 
-    
-    /* Neon Glow Effect */
     box-shadow: 0 0 15px rgba(42, 221, 241, 0.4);
-    
-    /* Pulsing Animation */
     animation: pulse-glow 2s infinite;
     transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
 }
-
 @keyframes pulse-glow {
     0% { box-shadow: 0 0 10px rgba(42, 221, 241, 0.4); }
     50% { box-shadow: 0 0 25px rgba(42, 221, 241, 0.7); }
     100% { box-shadow: 0 0 10px rgba(42, 221, 241, 0.4); }
 }
-
 .submit-btn:hover {
     background: #ffffff;
     transform: translateY(-2px);
     box-shadow: 0 0 30px rgba(42, 221, 241, 0.8);
 }
-
 .submit-btn:active {
     transform: scale(0.96);
 }
-
-/* --- 9. UPLOAD FORM UI --- */
 .upload-container { 
     display: flex; 
     justify-content: center; 
     padding: 50px 20px; 
 }
-
 .form-card label {
     display: block;
     text-align: left;
@@ -235,7 +196,6 @@ header {
     font-weight: 600;
     color: #2addef;
 }
-
 .form-card input, 
 .form-card select, 
 .form-card textarea {
@@ -248,20 +208,16 @@ header {
     border-radius: 6px;
     box-sizing: border-box;
 }
-
 .form-card option {
     background: #2b2b2b;
     color: white;
 }
-
-/* --- 10. GRID CONFIG --- */
 .grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 35px;
     padding: 40px 5%;
 }
-
 .empty-msg {
     grid-column: 1/-1;
     text-align: center;

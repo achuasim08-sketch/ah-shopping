@@ -1,18 +1,89 @@
-<div class="product-detail-container">
-    <div class="image-gallery">
-        <img src="placeholder.jpg" alt="Product Image">
-    </div>
-    
-    <div class="bidding-section">
-        <h2 id="productName">Product Title</h2>
-        <p id="description">Detailed item description goes here.</p>
-        
-        <div class="bid-box">
-            <span>Current Highest Bid:</span>
-            <h3 id="currentBid">₹ 0.00</h3> <input type="number" placeholder="Enter amount in ₹">
-            <button class="bid-btn">Place Bid</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auction Details | AH SHOPPING</title>
+    <link rel="stylesheet" href="style1.css">
+    <style>
+        /* Specific Styles for Product Detail Page */
+        .detail-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            padding: 20px;
+        }
+        .detail-image {
+            flex: 1 1 400px;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid rgba(42, 221, 241, 0.3);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        .detail-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+        .detail-info {
+            flex: 1 1 400px;
+            background: rgba(43, 43, 43, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(42, 221, 241, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .status-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .owner { border: 1px solid #2addef; color: #2addef; }
+        .closed { border: 1px solid #ff4d4d; color: #ff4d4d; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo" onclick="location.href='index.html'">AH SHOPPING</div>
+        <div class="user-profile">Auction Room</div>
+    </header>
+
+    <main class="detail-container">
+        <div class="detail-image">
+            <img id="detailImage" src="" alt="Product Image">
         </div>
-        
-        <p class="timer">Auction ends in: <span id="timeLeft">00:00:00</span></p>
-    </div>
-</div>
+
+        <div class="detail-info">
+            <h1 id="detailName" style="color: white; margin-top: 0;">Loading...</h1>
+            <p id="detailDesc" style="color: #ccc; margin-bottom: 20px;">...</p>
+            
+            <hr style="border-color: rgba(255,255,255,0.1);">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0;">
+                <div>
+                    <span style="display:block; font-size: 0.9rem; color: #888;">Current Highest Bid</span>
+                    <span id="detailPrice" class="price-tag" style="font-size: 2.5rem;">0</span>
+                    <span style="color: #2addef; font-size: 1.5rem; font-weight: bold;"> INR</span>
+                </div>
+                <div id="detailTimer" class="timer" style="font-size: 1.2rem;">Calculating...</div>
+            </div>
+
+            <div id="actionArea">
+                <p>Loading auction status...</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
