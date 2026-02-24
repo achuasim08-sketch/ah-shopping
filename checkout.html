@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Checkout | AH SHOPPING</title>
+    <link rel="stylesheet" href="style1.css">
+</head>
+<body>
+    <header>
+        <div class="logo" onclick="location.href='index.html'" style="cursor:pointer">AH SHOPPING</div>
+        <div class="user-profile">Secure Checkout 🔒</div>
+    </header>
+
+    <main class="upload-container">
+        <div class="form-card" style="max-width: 500px; width: 100%;">
+            <h2>Order Summary</h2>
+            
+            <div id="checkoutSummary" style="margin-bottom: 25px; text-align: left; padding: 15px; background: rgba(0,0,0,0.4); border-radius: 8px; border: 1px solid rgba(42, 221, 241, 0.2);">
+                <p>Loading order details...</p>
+            </div>
+            
+            <h2>Shipping & Payment</h2>
+            <form id="checkoutForm">
+                <label>Full Name</label>
+                <input type="text" required placeholder="Enter your full name">
+                
+                <label>Shipping Address</label>
+                <textarea rows="3" required placeholder="Street address, City, State, PIN..."></textarea>
+                
+                <label>Card Number</label>
+                <input type="text" required placeholder="XXXX-XXXX-XXXX-XXXX" pattern="\d{16}" title="Please enter a 16-digit card number">
+                
+                <div style="display: flex; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label>Expiry Date</label>
+                        <input type="text" required placeholder="MM/YY">
+                    </div>
+                    <div style="flex: 1;">
+                        <label>CVV</label>
+                        <input type="password" required placeholder="XXX" pattern="\d{3}" title="3-digit CVV">
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" style="background: #00ff00; color: #111; box-shadow: 0 0 15px rgba(0,255,0,0.4);">Confirm Payment</button>
+            </form>
+        </div>
+    </main>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<script src="script.js"></script>
+</body>
+</html>

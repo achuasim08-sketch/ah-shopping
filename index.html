@@ -8,7 +8,7 @@
 </head>
 <body>
     <header>
-        <div class="logo">AH SHOPPING</div>
+        <div class="logo" onclick="location.href='index.html'">AH SHOPPING</div>
         
         <div class="search-container">
             <input type="text" placeholder="Search for auctions..." id="searchBar">
@@ -22,6 +22,8 @@
         </div>
         <nav>
             <button onclick="location.href='upload.html'">Sell Item</button>
+            <button onclick="showMyUploads()" title="Items you are selling">📦 My Uploads</button>
+            <button onclick="showCart()" title="View Won Items">🛒 Won</button>
             <div class="user-profile">Profile</div>
         </nav>
     </header>
@@ -35,7 +37,9 @@
             <p class="empty-msg">No active auctions. Be the first to upload a product!</p>
         </div>
     </main>
-
-    <script src="script.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
