@@ -21,11 +21,23 @@
             <button type="submit">Search</button>
         </div>
         <nav>
-            <button onclick="location.href='upload.html'">Sell Item</button>
-            <button onclick="showMyUploads()" title="Items you are selling">📦 My Uploads</button>
-            <button onclick="showCart()" title="View Won Items">🛒 Won</button>
-            <div class="user-profile">Profile</div>
-        </nav>
+    <button onclick="location.href='upload.html'">Sell Item</button>
+    <button onclick="location.href='history.html'" title="View Transaction History">📜 History</button>
+    <button onclick="location.href='leaderboard.html'" title="Top Bidders">🏆 Leaderboard</button>
+    <div class="user-profile">Profile</div>
+</nav>
+<div id="rulesModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; align-items:center; justify-content:center;">
+    <div class="form-card" style="max-width: 500px; border-color:#ffd700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);">
+        <h2 style="color:#ffd700;">🛡️ Auction Rules</h2>
+        <ul style="text-align:left; color:#ccc; line-height:2;">
+            <li><b>Exclusive Spotlight:</b> Only one item is auctioned at a time platform-wide.</li>
+            <li><b>Bid Increment:</b> Every new bid must be at least <b>₹500</b> higher.</li>
+            <li><b>Time Sync:</b> Auctions use server clocks for fair timing.</li>
+            <li><b>Winner's Circle:</b> Winners get a PDF receipt in History.</li>
+        </ul>
+        <button onclick="closeRules()" class="submit-btn">Understood</button>
+    </div>
+</div>
     </header>
     <main>
         <section class="hero">

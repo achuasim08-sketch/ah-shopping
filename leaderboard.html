@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hall of Fame | AH SHOPPING</title>
+    <link rel="stylesheet" href="style1.css">
+</head>
+<body>
+    <header>
+        <div class="logo" onclick="location.href='index.html'" style="cursor:pointer">AH SHOPPING</div>
+        <div class="user-profile">Leaderboard 🏆</div>
+    </header>
+
+    <main class="upload-container">
+        <div class="form-card" style="max-width: 600px; width: 100%;">
+            <h1 style="color: #2addef; margin-bottom: 10px;">🏆 Auction Hall of Fame</h1>
+            <p style="color: #888; margin-bottom: 30px;">Celebrating our most successful bidders</p>
+            
+            <div id="leaderboardGrid">
+                <p>Loading the champions...</p>
+            </div>
+
+            <button onclick="location.href='index.html'" class="submit-btn" style="margin-top: 30px; background: rgba(42, 221, 241, 0.1); border: 1px solid #2addef; color: #2addef;">Return to Auctions</button>
+        </div>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script src="script.js"></script>
+</body>
+</html>

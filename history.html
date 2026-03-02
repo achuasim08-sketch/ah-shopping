@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History | AH SHOPPING</title>
+    <link rel="stylesheet" href="style1.css">
+</head>
+<body>
+    <header>
+        <div class="logo" onclick="location.href='index.html'">AH SHOPPING</div>
+        <div class="user-profile">Sales History</div>
+    </header>
+    <main class="upload-container">
+        <div style="width: 100%; max-width: 800px;">
+            <h2 style="text-align: center; color: #2addef;">Completed Auctions</h2>
+            <div id="historyGrid"></div>
+        </div>
+    </main>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="script.js"></script>
+    <script>
+        window.onload = () => loadTransactionHistory();
+    </script>
+</body>
+</html>
