@@ -354,3 +354,28 @@ nav button:hover {
     from { transform: translateX(0); opacity: 1; }
     to { transform: translateX(120%); opacity: 0; }
 }
+.maintenance-active::before {
+    content: "⚠️ SYSTEM UNDER MAINTENANCE - BIDDING & UPLOADS RESTRICTED";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #ff4d4d;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    padding: 8px 0;
+    z-index: 10001;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 15px rgba(255, 77, 77, 0.4);
+}
+
+.maintenance-active header {
+    border-bottom: 2px solid #ff4d4d;
+}
+
+.maintenance-active .bid-btn {
+    background: #444 !important;
+    cursor: not-allowed;
+    box-shadow: none;
+}

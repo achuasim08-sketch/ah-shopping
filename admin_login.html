@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | AH SHOPPING</title>
+    <link rel="stylesheet" href="style1.css">
+    <style>
+        .auth-container {
+            background: rgba(43, 43, 43, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid #ff4d4d;
+        }
+        .auth-container .logo {
+            color: #ff4d4d;
+        }
+        .auth-container h2 {
+            color: #ff4d4d;
+        }
+        .input-group label {
+            color: #ccc;
+        }
+        .submit-btn {
+            background: #ff4d4d;
+            color: white;
+        }
+    </style>
+</head>
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="logo">AH SHOPPING ADMIN</div>
+        <h2>Admin Login</h2>
+        <form id="adminLoginForm">
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" id="admin-email" required value="admin@gmail.com">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="admin-password" required value="admin123">
+            </div>
+            <button type="submit" class="submit-btn">Login as Admin</button>
+        </form>
+        <p style="color: #888; margin-top: 15px;">Authorized personnel only</p>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAITObyrVqlldNoKEckKmNoIJrmsUeEoVo",
+            authDomain: "ah-shopping-7161d.firebaseapp.com",
+            projectId: "ah-shopping-7161d",
+            storageBucket: "ah-shopping-7161d.firebasestorage.app",
+            messagingSenderId: "941881580369",
+            appId: "1:941881580369:web:0ea5511eaa6cec86c6d170",
+            measurementId: "G-1M7NTWJNS2"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        document.getElementById('adminLoginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+
+            // Set session persistence so admin session is tab‑isolated
+            auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
+                .then(() => {
+                    return auth.signInWithEmailAndPassword(email, password);
+                })
+                .then((userCredential) => {
+                    if (email === 'admin@gmail.com') {
+                        window.location.href = 'admin.html';
+                    } else {
+                        alert('Access denied: Not an admin account');
+                        auth.signOut();
+                    }
+                })
+                .catch((error) => {
+                    alert('Login failed: ' + error.message);
+                });
+        });
+    </script>
+</body>
+</html>

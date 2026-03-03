@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Control | AH SHOPPING</title>
+    <link rel="stylesheet" href="style1.css">
+</head>
+<body>
+    <header>
+        <div class="logo" onclick="location.href='index.html'">AH SHOPPING</div>
+        <div class="user-profile">Admin Panel 🛠️</div>
+    </header>
+
+    <main class="upload-container">
+        <div class="form-card" style="max-width: 600px; width: 100%; border-color: #ff4d4d;">
+            <h1 style="color: #ff4d4d;">System Controls</h1>
+            <p style="color: #ccc; margin-bottom: 30px;">Danger Zone: These actions cannot be undone.</p>
+            
+            <div class="button-group">
+                <button onclick="adminResetAuctions()" class="submit-btn" style="background: #ff4d4d;">Force End All Auctions</button>
+                <p style="font-size: 0.8rem; color: #888;">Deletes all active items from the grid immediately.</p>
+                
+                <button onclick="adminResetHistory()" class="submit-btn" style="background: #444; margin-top: 20px;">Clear Transaction History</button>
+                <p style="font-size: 0.8rem; color: #888;">Wipes the leaderboard and all past sales records.</p>
+            </div>
+
+            <button onclick="location.href='index.html'" class="submit-btn" style="margin-top: 40px; background: transparent; border: 1px solid #2addef; color: #2addef;">Back to Home</button>
+        
+             <button onclick="toggleMaintenance()" class="submit-btn" style="background: #ffd700; color: #111;">
+    🔄 Toggle Maintenance Mode
+</button>
+        </div>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
