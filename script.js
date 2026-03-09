@@ -11,7 +11,6 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
 
 const FEES = {
@@ -183,21 +182,27 @@ window.toggleMaintenance = async function() {
 window.cancelAuction = async function(id) {
     try {
         if (!confirm("Are you sure you want to cancel this auction? This action cannot be undone!")) return;
-
+        
         const productRef = db.collection("products").doc(id);
         const productDoc = await productRef.get();
-
+        
         if (!productDoc.exists) {
             showCustomAlert("Product not found!", "error");
             window.location.href = "index.html";
             return;
         }
-
+        
         const product = productDoc.data();
-        console.log("Current user UID:", auth.currentUser?.uid);
-        console.log("Seller UID from document:", product.sellerUid);
+        
+        if (auth.currentUser.uid !== product.sellerUid) {
+            throw new Error("You are not authorized to cancel this auction.");
+        }
 
-        await productRef.delete();
+        await productRef.update({
+            status: 'cancelled',
+            deleted: true
+        });
+
         showCustomAlert("Auction cancelled successfully!", "success");
         window.location.href = "index.html";
     } catch (e) {
@@ -259,7 +264,8 @@ async function checkAuctionAvailability() {
             const p = doc.data();
             const startTime = p.createdAt ? p.createdAt.toMillis() : now;
             const endTime = startTime + (p.durationMs || 10800000);
-            if (endTime > now) active = true;
+            
+            if (endTime > now && p.status === 'active' && !p.deleted) active = true;
         });
         
         if (active) {
@@ -288,10 +294,11 @@ function renderProducts(filterText = "", filterCategory = "all") {
         snapshot.forEach((doc) => {
             const p = doc.data();
             const id = doc.id;
-            const startTime = p.createdAt ? p.createdAt.toMillis() : now;
-            const endTime = startTime + (p.durationMs || 10800000); 
             
-            if (endTime < now) return; 
+            const startTime = p.createdAt ? p.createdAt.toMillis() : now;
+            const endTime = startTime + (p.durationMs || 10800000);
+
+            if (endTime < now || p.deleted || p.status === 'cancelled') return; 
             
             const nameMatch = p.name.toLowerCase().includes(filterText.toLowerCase());
             const catMatch = filterCategory === "all" || p.category.toLowerCase() === filterCategory.toLowerCase();
@@ -317,11 +324,6 @@ function renderProducts(filterText = "", filterCategory = "all") {
 function loadProductDetails() {
     const urlParams = new URLSearchParams(window.location.search);
     const productId = urlParams.get('id'); 
-    
-    if (!productId) { 
-        window.location.href = 'index.html'; 
-        return; 
-    }
     
     db.collection("products").doc(productId).onSnapshot((doc) => {
         if (!doc.exists) { 
@@ -356,10 +358,50 @@ function loadProductDetails() {
         
         if (user && (user.uid === product.sellerUid || isAdmin)) {
             const label = isAdmin ? "Admin: Force Delete" : "Cancel Auction";
-            area.innerHTML = `<button onclick="cancelAuction('${doc.id}')" class="submit-btn" style="background: #ff4d4d;">${label}</button>`;
+            const action = isAdmin ? `adminDeleteProduct('${doc.id}')` : `cancelAuction('${doc.id}')`;
+            area.innerHTML = `<button onclick="${action}" class="submit-btn" style="background: #ff4d4d;">${label}</button>`;
         } else {
-            const min = parseInt(product.price) + FEES.BID_INCREMENT;
-            area.innerHTML = `<div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;"><p>Next Bid: ₹${min}</p><div style="display:flex; gap:10px;"><input type="number" id="customBidAmount" placeholder="₹${min}" style="flex:1; padding:10px; border-radius:8px; border:1px solid #2addef; background:transparent; color:white;"><button onclick="placeBid('${doc.id}')" class="bid-btn">Place Bid</button></div></div>`;
+            const currentBid = parseInt(product.price);
+            
+            let highestBidderHtml = '';
+            if (product.highestBidder) {
+                highestBidderHtml = `
+                    <div style="background: rgba(42, 221, 241, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2addef;">
+                        <p style="margin: 0; color: #2addef;">🏆 Current Highest Bidder</p>
+                        <p style="margin: 5px 0 0 0; font-weight: bold; font-size: 1.1rem;">${product.highestBidder}</p>
+                        <p style="margin: 5px 0 0 0; color: #00ff00;">₹${product.price}</p>
+                    </div>
+                `;
+            } else {
+                highestBidderHtml = `
+                    <div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                        <p style="margin: 0; color: #888;">No bids yet. Be the first to bid!</p>
+                    </div>
+                `;
+            }
+            
+            area.innerHTML = `
+                ${highestBidderHtml}
+                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;">
+                    <p>Current Bid: <span style="color: #2addef; font-weight: bold;">₹${currentBid}</span></p>
+                    <p style="font-size: 0.9rem; color: #ccc;">Enter amount to add to current bid</p>
+                    <div style="display:flex; flex-direction: column; gap:10px;">
+                        <input type="number" id="customBidAmount" placeholder="Enter amount to add (e.g., 10, 50, 100)" style="flex:1; padding:12px; border-radius:8px; border:1px solid #2addef; background:transparent; color:white;" min="1" step="1" value="0">
+                        <div style="display:flex; gap:10px; align-items: center;">
+                            <span style="color:#fff;">Your total bid =</span>
+                            <span id="totalBidDisplay" style="color:#00ff00; font-weight:bold; font-size:1.2rem;">₹${currentBid}</span>
+                        </div>
+                        <button onclick="placeBid('${doc.id}')" class="bid-btn">Place Bid of ₹${currentBid}</button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('customBidAmount').addEventListener('input', function() {
+                const addAmount = parseInt(this.value) || 0;
+                const total = currentBid + addAmount;
+                document.getElementById('totalBidDisplay').innerText = `₹${total}`;
+                document.querySelector('#actionArea .bid-btn').innerText = `Place Bid of ₹${total}`;
+            });
         }
         
         startTimer('detailTimer', endTime);
@@ -368,25 +410,29 @@ function loadProductDetails() {
 
 window.placeBid = async function(productId) {
     const user = auth.currentUser; 
-    const bidAmt = parseInt(document.getElementById('customBidAmount').value);
+    const addAmount = parseInt(document.getElementById('customBidAmount').value) || 0;
     const ref = db.collection("products").doc(productId);
+    let totalBidAmount = 0;
     
     try {
         await db.runTransaction(async (t) => {
             const d = await t.get(ref); 
             const p = d.data(); 
-            const min = p.price + FEES.BID_INCREMENT;
+            const currentBid = p.price;
+            totalBidAmount = currentBid + addAmount;
             
             if (user.uid === p.sellerUid) throw new Error("Owners cannot bid!");
-            if (isNaN(bidAmt) || bidAmt < min) throw new Error(`Min bid is ₹${min}`);
+            if (addAmount < 1) throw new Error("Please enter a valid amount to add");
             
             t.update(ref, { 
-                price: bidAmt, 
+                price: totalBidAmount, 
                 highestBidder: user.email, 
                 highestBidderUid: user.uid 
             });
         });
-        showCustomAlert("Your bid has been recorded!", "success");
+        
+        document.getElementById('customBidAmount').value = '0';
+        showCustomAlert(`Your bid of ₹${totalBidAmount} has been recorded!`, "success");
     } catch (e) { 
         showCustomAlert(e.message, "error"); 
     }
@@ -481,8 +527,29 @@ function loadLeaderboard() {
 function setupSignup() { 
     document.getElementById('signupForm')?.addEventListener('submit', (e) => { 
         e.preventDefault(); 
-        auth.createUserWithEmailAndPassword(document.getElementById('su-email').value, document.getElementById('su-pass').value)
-        .then(() => showCustomAlert("Success!", "success")); 
+        
+        const email = document.getElementById('su-email').value;
+        const pass = document.getElementById('su-pass').value;
+        const phone = document.getElementById('su-phone').value;
+        const address = document.getElementById('su-address').value;
+
+        auth.createUserWithEmailAndPassword(email, pass)
+        .then((userCredential) => {
+            const user = userCredential.user;
+            
+            return db.collection('users').doc(user.uid).set({
+                email: email,
+                phone: phone,
+                address: address,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        })
+        .then(() => {
+            showCustomAlert("Account created successfully!", "success");
+        })
+        .catch((error) => {
+            showCustomAlert(error.message, "error");
+        });
     }); 
 }
 
@@ -499,3 +566,60 @@ function setupSearch() {
         renderProducts(document.getElementById('searchBar').value, document.getElementById('filterCategory').value);
     }); 
 }
+
+async function checkAuctionCompletion() {
+    const now = new Date().getTime();
+    const productsRef = db.collection("products");
+    
+    try {
+        const snapshot = await productsRef.where("status", "==", "active").get();
+        
+        snapshot.forEach(async (doc) => {
+            const auction = doc.data();
+            const startTime = auction.createdAt ? auction.createdAt.toMillis() : now;
+            const endTime = startTime + (auction.durationMs || 10800000);
+            
+            if (endTime < now && !auction.deleted) {
+                const auctionRef = productsRef.doc(doc.id);
+                
+                if (auction.highestBidderUid) {
+                    await db.collection("history").add({
+                        name: auction.name,
+                        price: auction.price,
+                        highestBidder: auction.highestBidder,
+                        highestBidderUid: auction.highestBidderUid,
+                        sellerUid: auction.sellerUid,
+                        sellerEmail: auction.sellerEmail,
+                        soldAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        image: auction.image
+                    });
+                    
+                    await auctionRef.update({
+                        status: 'ended',
+                        endedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    const currentUser = auth.currentUser;
+                    if (currentUser && currentUser.uid === auction.highestBidderUid) {
+                        showCustomAlert('Congratulations! You won the auction! Checkout now.', 'success');
+                        
+                        setTimeout(() => {
+                            window.location.href = `checkout.html?id=${doc.id}`;
+                        }, 3000);
+                    }
+                } else {
+                    await auctionRef.update({
+                        status: 'ended',
+                        deleted: true,
+                        endedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error checking auction completion:', error);
+    }
+}
+
+setInterval(checkAuctionCompletion, 10000);
+document.addEventListener('DOMContentLoaded', checkAuctionCompletion);
