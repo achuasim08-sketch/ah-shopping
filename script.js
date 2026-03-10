@@ -7,6 +7,7 @@ const firebaseConfig = {
     appId: "1:941881580369:web:0ea5511eaa6cec86c6d170",
     measurementId: "G-1M7NTWJNS2"
 };
+
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -18,7 +19,7 @@ const FEES = {
     BID_INCREMENT: 500
 };
 
-const ADMIN_EMAIL = 'admin@ahshopping.com';
+const ADMIN_EMAIL = 'admin@gmail.com';
 
 auth.onAuthStateChanged((user) => {
     const path = window.location.pathname;
@@ -34,9 +35,6 @@ auth.onAuthStateChanged((user) => {
     
     if (user) { 
         setupUserProfile(user); 
-        if (path.includes("index.html") || path.endsWith("/")) {
-            checkFirstVisit();
-        }
     }
     initializePageLogic();
 });
@@ -51,12 +49,43 @@ function checkFirstVisit() {
 }
 
 window.closeRules = function() {
-    localStorage.setItem('rulesSeen', 'true');
     const modal = document.getElementById('rulesModal');
     if (modal) {
         modal.style.display = 'none';
     }
+    const user = auth.currentUser;
+    if (user) {
+        db.collection('users').doc(user.uid).update({
+            rulesSeen: true
+        }).catch(err => console.error("Error updating rulesSeen:", err));
+    }
+    localStorage.setItem('rulesSeen', 'true');
 };
+
+async function checkAndShowRules() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            if (userData.rulesSeen === false) {
+                const modal = document.getElementById('rulesModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                }
+            }
+        } else {
+            const modal = document.getElementById('rulesModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+    } catch (error) {
+        console.error("Error checking rulesSeen:", error);
+    }
+}
 
 function initializePageLogic() {
     const path = window.location.pathname;
@@ -66,6 +95,7 @@ function initializePageLogic() {
         renderProducts();
         setupSearch();
         checkAuctionAvailability();
+        checkAndShowRules();
     } else if (path.includes("product.html")) {
         loadProductDetails();
     } else if (path.includes("upload.html")) {
@@ -167,18 +197,6 @@ window.logout = function() {
     });
 };
 
-window.toggleMaintenance = async function() {
-    if (auth.currentUser.email !== ADMIN_EMAIL) return;
-    
-    const statusRef = db.collection("system").doc("status");
-    const doc = await statusRef.get();
-    const currentState = doc.exists ? doc.data().maintenance : false;
-    
-    await statusRef.set({ maintenance: !currentState }, { merge: true });
-    showCustomAlert(`Maintenance: ${!currentState ? 'ENABLED' : 'DISABLED'}`, "warning");
-    applyMaintenanceUI();
-};
-
 window.cancelAuction = async function(id) {
     try {
         if (!confirm("Are you sure you want to cancel this auction? This action cannot be undone!")) return;
@@ -222,19 +240,6 @@ window.adminDeleteProduct = async function(id) {
         window.location.href = "index.html";
     } catch (e) { 
         console.error("Error deleting product:", e);
-        showCustomAlert(e.message, "error"); 
-    }
-};
-
-window.adminResetAuctions = async function() {
-    if (!confirm("CRITICAL: Wipe ALL active auctions?")) return;
-    try {
-        const snap = await db.collection("products").get();
-        const batch = db.batch();
-        snap.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-        showCustomAlert("All active auctions cleared.", "success");
-    } catch (e) { 
         showCustomAlert(e.message, "error"); 
     }
 };
@@ -321,11 +326,92 @@ function renderProducts(filterText = "", filterCategory = "all") {
     });
 }
 
+async function checkRegistrationFee(productId, userId) {
+    try {
+        const registrationRef = db.collection("registrations").doc(`${productId}_${userId}`);
+        const registrationDoc = await registrationRef.get();
+        
+        if (registrationDoc.exists) {
+            return {
+                paid: true,
+                data: registrationDoc.data()
+            };
+        } else {
+            return {
+                paid: false
+            };
+        }
+    } catch (error) {
+        console.error("Error checking registration fee:", error);
+        return {
+            paid: false,
+            error: error.message
+        };
+    }
+}
+
+window.payRegistrationFee = async function(productId) {
+    const user = auth.currentUser;
+    if (!user) {
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    try {
+        const productDoc = await db.collection("products").doc(productId).get();
+        if (!productDoc.exists) {
+            showCustomAlert("Product not found!", "error");
+            return;
+        }
+        
+        const product = productDoc.data();
+        
+        if (window.EasyPayIO) {
+            EasyPayIO.pay({
+                amount: FEES.REGISTRATION,
+                productName: `Registration Fee - ${product.name}`,
+                productDescription: `Auction registration fee for ${product.name}`,
+                userEmail: user.email,
+                onSuccess: async (response) => {
+                    console.log('Registration payment successful:', response);
+                    
+                    const registrationRef = db.collection("registrations").doc(`${productId}_${user.uid}`);
+                    await registrationRef.set({
+                        productId: productId,
+                        productName: product.name,
+                        userId: user.uid,
+                        userEmail: user.email,
+                        sellerUid: product.sellerUid,
+                        sellerEmail: product.sellerEmail,
+                        feeAmount: FEES.REGISTRATION,
+                        paidAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        status: 'paid',
+                        transactionId: response.transactionId || 'txn_' + Date.now()
+                    });
+                    
+                    showCustomAlert("Registration fee paid successfully! You can now place your bid.", "success");
+                    
+                    location.reload();
+                },
+                onFailure: (error) => {
+                    console.error('Registration payment failed:', error);
+                    showCustomAlert('Registration fee payment failed. Please try again.', 'error');
+                }
+            });
+        } else {
+            showCustomAlert('Payment system not available. Please try again.', 'error');
+        }
+    } catch (error) {
+        console.error("Error processing registration fee:", error);
+        showCustomAlert("Error processing registration fee: " + error.message, "error");
+    }
+};
+
 function loadProductDetails() {
     const urlParams = new URLSearchParams(window.location.search);
     const productId = urlParams.get('id'); 
     
-    db.collection("products").doc(productId).onSnapshot((doc) => {
+    db.collection("products").doc(productId).onSnapshot(async (doc) => {
         if (!doc.exists) { 
             window.location.href = 'index.html'; 
             return; 
@@ -380,28 +466,47 @@ function loadProductDetails() {
                 `;
             }
             
-            area.innerHTML = `
-                ${highestBidderHtml}
-                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;">
-                    <p>Current Bid: <span style="color: #2addef; font-weight: bold;">₹${currentBid}</span></p>
-                    <p style="font-size: 0.9rem; color: #ccc;">Enter amount to add to current bid</p>
-                    <div style="display:flex; flex-direction: column; gap:10px;">
-                        <input type="number" id="customBidAmount" placeholder="Enter amount to add (e.g., 10, 50, 100)" style="flex:1; padding:12px; border-radius:8px; border:1px solid #2addef; background:transparent; color:white;" min="1" step="1" value="0">
-                        <div style="display:flex; gap:10px; align-items: center;">
-                            <span style="color:#fff;">Your total bid =</span>
-                            <span id="totalBidDisplay" style="color:#00ff00; font-weight:bold; font-size:1.2rem;">₹${currentBid}</span>
-                        </div>
-                        <button onclick="placeBid('${doc.id}')" class="bid-btn">Place Bid of ₹${currentBid}</button>
-                    </div>
-                </div>
-            `;
+            const registrationStatus = await checkRegistrationFee(productId, user.uid);
             
-            document.getElementById('customBidAmount').addEventListener('input', function() {
-                const addAmount = parseInt(this.value) || 0;
-                const total = currentBid + addAmount;
-                document.getElementById('totalBidDisplay').innerText = `₹${total}`;
-                document.querySelector('#actionArea .bid-btn').innerText = `Place Bid of ₹${total}`;
-            });
+            if (!registrationStatus.paid) {
+                area.innerHTML = `
+                    ${highestBidderHtml}
+                    <div style="background: rgba(255, 215, 0, 0.1); padding: 20px; border-radius: 8px; border: 2px solid #ffd700; text-align: center;">
+                        <h3 style="color: #ffd700; margin-top: 0;">🔒 Registration Required</h3>
+                        <p style="margin: 15px 0;">To bid on this item, you need to pay a one-time registration fee of <span style="color: #ffd700; font-weight: bold; font-size: 1.3rem;">₹${FEES.REGISTRATION}</span></p>
+                        <p style="font-size: 0.9rem; color: #ccc; margin-bottom: 20px;">This fee allows you to bid on this specific auction only.</p>
+                        <button onclick="payRegistrationFee('${productId}')" class="easypayio-pay-btn submit-btn" style="background: #ffd700; color: #111; border: none; font-weight: bold;">
+                            Pay ₹${FEES.REGISTRATION} Registration Fee with EasyPayIO 💳
+                        </button>
+                    </div>
+                `;
+            } else {
+                area.innerHTML = `
+                    ${highestBidderHtml}
+                    <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;">
+                        <div style="background: rgba(0, 255, 0, 0.1); padding: 8px; border-radius: 4px; margin-bottom: 15px; border-left: 3px solid #00ff00;">
+                            <p style="margin: 0; color: #00ff00;">✅ Registration fee paid</p>
+                        </div>
+                        <p>Current Bid: <span style="color: #2addef; font-weight: bold;">₹${currentBid}</span></p>
+                        <p style="font-size: 0.9rem; color: #ccc;">Enter amount to add to current bid</p>
+                        <div style="display:flex; flex-direction: column; gap:10px;">
+                            <input type="number" id="customBidAmount" placeholder="Enter amount to add (e.g., 10, 50, 100)" style="flex:1; padding:12px; border-radius:8px; border:1px solid #2addef; background:transparent; color:white;" min="1" step="1" value="0">
+                            <div style="display:flex; gap:10px; align-items: center;">
+                                <span style="color:#fff;">Your total bid =</span>
+                                <span id="totalBidDisplay" style="color:#00ff00; font-weight:bold; font-size:1.2rem;">₹${currentBid}</span>
+                            </div>
+                            <button onclick="placeBid('${productId}')" class="bid-btn">Place Bid of ₹${currentBid}</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('customBidAmount').addEventListener('input', function() {
+                    const addAmount = parseInt(this.value) || 0;
+                    const total = currentBid + addAmount;
+                    document.getElementById('totalBidDisplay').innerText = `₹${total}`;
+                    document.querySelector('#actionArea .bid-btn').innerText = `Place Bid of ₹${total}`;
+                });
+            }
         }
         
         startTimer('detailTimer', endTime);
@@ -415,6 +520,13 @@ window.placeBid = async function(productId) {
     let totalBidAmount = 0;
     
     try {
+        const registrationStatus = await checkRegistrationFee(productId, user.uid);
+        
+        if (!registrationStatus.paid) {
+            showCustomAlert("You must pay the registration fee before placing a bid!", "error");
+            return;
+        }
+        
         await db.runTransaction(async (t) => {
             const d = await t.get(ref); 
             const p = d.data(); 
@@ -478,6 +590,7 @@ function setupUploadPage() {
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     durationMs: 10800000,
                     sellerUid: auth.currentUser.uid,
+                    sellerEmail: auth.currentUser.email,
                     highestBidder: null, 
                     highestBidderUid: null
                 }).then(() => { 
@@ -541,6 +654,7 @@ function setupSignup() {
                 email: email,
                 phone: phone,
                 address: address,
+                rulesSeen: false,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
         })
@@ -591,7 +705,8 @@ async function checkAuctionCompletion() {
                         sellerUid: auction.sellerUid,
                         sellerEmail: auction.sellerEmail,
                         soldAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        image: auction.image
+                        image: auction.image,
+                        transactionId: auction.transactionId || null
                     });
                     
                     await auctionRef.update({
@@ -601,7 +716,7 @@ async function checkAuctionCompletion() {
                     
                     const currentUser = auth.currentUser;
                     if (currentUser && currentUser.uid === auction.highestBidderUid) {
-                        showCustomAlert('Congratulations! You won the auction! Checkout now.', 'success');
+                        showCustomAlert('🎉 Congratulations! You won the auction! Proceed to checkout.', 'success');
                         
                         setTimeout(() => {
                             window.location.href = `checkout.html?id=${doc.id}`;

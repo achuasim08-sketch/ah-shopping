@@ -103,7 +103,10 @@ function setupPaymentButton(auction, user) {
     payNowBtn.setAttribute('data-product-description', auction.description || `Winning bid: ₹${auction.price}`);
     payNowBtn.setAttribute('data-user-email', user.email);
 
-    payNowBtn.addEventListener('click', async (e) => {
+    const newPayNowBtn = payNowBtn.cloneNode(true);
+    payNowBtn.parentNode.replaceChild(newPayNowBtn, payNowBtn);
+    
+    newPayNowBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         
         if (!validateShippingForm()) {
@@ -111,6 +114,30 @@ function setupPaymentButton(auction, user) {
         }
 
         paymentLoading.style.display = 'flex';
+
+        if (window.EasyPayIO) {
+            EasyPayIO.pay({
+                amount: total,
+                productName: auction.name,
+                productDescription: auction.description || `Winning bid: ₹${auction.price}`,
+                userEmail: user.email,
+                onSuccess: (response) => {
+                    console.log('Payment successful:', response);
+                    handlePaymentSuccess({
+                        ...response,
+                        amount: total,
+                        transactionId: response.transactionId || 'txn_' + Date.now()
+                    });
+                },
+                onFailure: (error) => {
+                    console.error('Payment failed:', error);
+                    handlePaymentFailure(error);
+                }
+            });
+        } else {
+            paymentLoading.style.display = 'none';
+            showCustomAlert('Payment system not available. Please try again.', 'error');
+        }
     });
 }
 
@@ -278,3 +305,24 @@ document.getElementById('cvv')?.addEventListener('input', (e) => {
     if (value.length > 3) value = value.slice(0, 3);
     e.target.value = value;
 });
+
+function showCustomAlert(msg, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `custom-toast ${type}`;
+    toast.innerHTML = `<span style="font-weight: 500;">${msg}</span><button class="toast-close" onclick="this.parentElement.remove()">&times;</button>`;
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast && document.body.contains(toast)) {
+            toast.style.animation = 'fadeOutRight 0.4s forwards';
+            setTimeout(() => toast.remove(), 400);
+        }
+    }, 4000);
+}
