@@ -21,6 +21,40 @@ const FEES = {
 
 const ADMIN_EMAIL = 'admin@gmail.com';
 
+const usernameCache = new Map();
+
+async function getUsernameByUid(uid) {
+    if (usernameCache.has(uid)) {
+        return usernameCache.get(uid);
+    }
+    
+    try {
+        const userDoc = await db.collection('users').doc(uid).get();
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            const username = userData.username || userData.email.split('@')[0];
+            usernameCache.set(uid, username);
+            return username;
+        }
+    } catch (error) {
+        console.error('Error fetching username:', error);
+    }
+    return null;
+}
+
+async function getUsernameByEmail(email) {
+    try {
+        const usersSnapshot = await db.collection('users').where('email', '==', email).get();
+        if (!usersSnapshot.empty) {
+            const userData = usersSnapshot.docs[0].data();
+            return userData.username || email.split('@')[0];
+        }
+    } catch (error) {
+        console.error('Error fetching username by email:', error);
+    }
+    return email.split('@')[0];
+}
+
 auth.onAuthStateChanged((user) => {
     const path = window.location.pathname;
     const isPublicPage = path.includes('login.html') || path.includes('signup.html');
@@ -129,6 +163,9 @@ async function setupUserProfile(user) {
     if (!profile || window.location.pathname.includes('checkout.html')) return;
     
     try {
+        const username = await getUsernameByUid(user.uid);
+        const displayName = username || user.email.split('@')[0];
+        
         const snapshot = await db.collection("history").get();
         const stats = {};
         snapshot.forEach(doc => {
@@ -140,11 +177,13 @@ async function setupUserProfile(user) {
         
         profile.innerHTML = `
             ${isChampion ? '<span title="Top Winner" style="margin-right:8px; filter: drop-shadow(0 0 8px #ffd700); cursor:help;">👑</span>' : ''}
-            <span style="color:#2addef; font-weight:bold;">${user.email.split('@')[0]}</span> 
+            <span style="color:#2addef; font-weight:bold;">${displayName}</span> 
             <button onclick="logout()" style="background:#ff4d4d; border:none; color:white; padding:5px 10px; margin-left:10px; cursor:pointer; border-radius:4px; font-weight:bold;">Logout</button>
         `;
     } catch (e) {
-        profile.innerHTML = `<span style="color:#2addef; font-weight:bold;">${user.email.split('@')[0]}</span> <button onclick="logout()" style="background:#ff4d4d; border:none; color:white; padding:5px 10px; margin-left:10px; cursor:pointer; border-radius:4px; font-weight:bold;">Logout</button>`;
+        const username = await getUsernameByUid(user.uid);
+        const displayName = username || user.email.split('@')[0];
+        profile.innerHTML = `<span style="color:#2addef; font-weight:bold;">${displayName}</span> <button onclick="logout()" style="background:#ff4d4d; border:none; color:white; padding:5px 10px; margin-left:10px; cursor:pointer; border-radius:4px; font-weight:bold;">Logout</button>`;
     }
 }
 
@@ -451,10 +490,11 @@ function loadProductDetails() {
             
             let highestBidderHtml = '';
             if (product.highestBidder) {
+                const bidderUsername = await getUsernameByEmail(product.highestBidder);
                 highestBidderHtml = `
                     <div style="background: rgba(42, 221, 241, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2addef;">
                         <p style="margin: 0; color: #2addef;">🏆 Current Highest Bidder</p>
-                        <p style="margin: 5px 0 0 0; font-weight: bold; font-size: 1.1rem;">${product.highestBidder}</p>
+                        <p style="margin: 5px 0 0 0; font-weight: bold; font-size: 1.1rem;">${bidderUsername}</p>
                         <p style="margin: 5px 0 0 0; color: #00ff00;">₹${product.price}</p>
                     </div>
                 `;
@@ -527,6 +567,8 @@ window.placeBid = async function(productId) {
             return;
         }
         
+        const username = await getUsernameByUid(user.uid);
+        
         await db.runTransaction(async (t) => {
             const d = await t.get(ref); 
             const p = d.data(); 
@@ -538,7 +580,8 @@ window.placeBid = async function(productId) {
             
             t.update(ref, { 
                 price: totalBidAmount, 
-                highestBidder: user.email, 
+                highestBidder: user.email,
+                highestBidderUsername: username,
                 highestBidderUid: user.uid 
             });
         });
@@ -604,66 +647,113 @@ function setupUploadPage() {
     });
 }
 
-function loadTransactionHistory() {
+async function loadTransactionHistory() {
     const grid = document.getElementById('historyGrid'); 
     if (!grid) return;
     
-    db.collection("history").orderBy("soldAt", "desc").onSnapshot((snap) => {
+    db.collection("history").orderBy("soldAt", "desc").onSnapshot(async (snap) => {
         grid.innerHTML = "";
-        snap.forEach((doc) => {
+        
+        for (const doc of snap.docs) {
             const h = doc.data(); 
+            const winnerUsername = await getUsernameByEmail(h.highestBidder);
+            
             const card = document.createElement('div'); 
             card.className = 'form-card'; 
             card.style.marginBottom = "20px";
-            card.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><div style="text-align:left;"><h2>${h.name}</h2><p>Winner: <b>${h.highestBidder}</b></p></div><div style="text-align:right;"><span class="price-tag">₹${h.price}</span></div></div>`;
+            card.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="text-align:left;">
+                    <h2>${h.name}</h2>
+                    <p>Winner: <b>${winnerUsername}</b></p>
+                </div>
+                <div style="text-align:right;">
+                    <span class="price-tag">₹${h.price}</span>
+                </div>
+            </div>`;
             grid.appendChild(card);
-        });
+        }
     });
 }
 
-function loadLeaderboard() {
+async function loadLeaderboard() {
     const grid = document.getElementById('leaderboardGrid'); 
     if (!grid) return;
     
-    db.collection("history").get().then((snap) => {
-        const stats = {}; 
-        snap.forEach(doc => { 
+    try {
+        const historySnapshot = await db.collection("history").get();
+        const stats = {};
+        
+        historySnapshot.forEach(doc => { 
             const h = doc.data(); 
             stats[h.highestBidder] = (stats[h.highestBidder] || 0) + 1; 
         });
         
         const sorted = Object.entries(stats).sort((a,b) => b[1] - a[1]);
-        grid.innerHTML = sorted.map(([u, w], i) => `<div class="form-card" style="margin-bottom:10px; display:flex; justify-content:space-between;"><span>#${i+1} <b>${u}</b></span><span style="color:#2addef;">${w} Wins</span></div>`).join('');
-    });
+        
+        let leaderboardHtml = '';
+        for (let i = 0; i < sorted.length; i++) {
+            const [email, wins] = sorted[i];
+            const username = await getUsernameByEmail(email);
+            leaderboardHtml += `
+                <div class="form-card" style="margin-bottom:10px; display:flex; justify-content:space-between;">
+                    <span>#${i+1} <b>${username}</b></span>
+                    <span style="color:#2addef;">${wins} Win${wins > 1 ? 's' : ''}</span>
+                </div>
+            `;
+        }
+        
+        grid.innerHTML = leaderboardHtml || '<p class="empty-msg">No winners yet. Be the first!</p>';
+    } catch (error) {
+        console.error('Error loading leaderboard:', error);
+        grid.innerHTML = '<p class="empty-msg">Error loading leaderboard</p>';
+    }
 }
 
 function setupSignup() { 
-    document.getElementById('signupForm')?.addEventListener('submit', (e) => { 
+    document.getElementById('signupForm')?.addEventListener('submit', async (e) => { 
         e.preventDefault(); 
         
         const email = document.getElementById('su-email').value;
+        const username = document.getElementById('su-username').value.toLowerCase().trim();
         const pass = document.getElementById('su-pass').value;
         const phone = document.getElementById('su-phone').value;
         const address = document.getElementById('su-address').value;
 
-        auth.createUserWithEmailAndPassword(email, pass)
-        .then((userCredential) => {
+        if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
+            showCustomAlert('Username must be 3-30 characters and can only contain letters, numbers, and underscores', 'error');
+            return;
+        }
+
+        try {
+            const usernameSnapshot = await db.collection('usernames').doc(username).get();
+            if (usernameSnapshot.exists) {
+                showCustomAlert('Username already taken. Please choose another one.', 'error');
+                return;
+            }
+
+            const userCredential = await auth.createUserWithEmailAndPassword(email, pass);
             const user = userCredential.user;
             
-            return db.collection('users').doc(user.uid).set({
+            await db.collection('usernames').doc(username).set({
+                uid: user.uid,
                 email: email,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            await db.collection('users').doc(user.uid).set({
+                email: email,
+                username: username,
                 phone: phone,
                 address: address,
                 rulesSeen: false,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-        })
-        .then(() => {
+
             showCustomAlert("Account created successfully!", "success");
-        })
-        .catch((error) => {
+            
+        } catch (error) {
             showCustomAlert(error.message, "error");
-        });
+        }
     }); 
 }
 
@@ -697,10 +787,13 @@ async function checkAuctionCompletion() {
                 const auctionRef = productsRef.doc(doc.id);
                 
                 if (auction.highestBidderUid) {
+                    const winnerUsername = await getUsernameByUid(auction.highestBidderUid);
+                    
                     await db.collection("history").add({
                         name: auction.name,
                         price: auction.price,
                         highestBidder: auction.highestBidder,
+                        highestBidderUsername: winnerUsername || auction.highestBidder.split('@')[0],
                         highestBidderUid: auction.highestBidderUid,
                         sellerUid: auction.sellerUid,
                         sellerEmail: auction.sellerEmail,

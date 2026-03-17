@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sell on AH SHOPPING</title>
-    <link rel="stylesheet" href="style1.css"> 
+    <link rel="stylesheet" href="style1.css">
     <style>
         .error-message {
             color: #ff4d4d;
@@ -62,7 +62,13 @@
 
     <header>
         <div class="logo" onclick="location.href='index.html'" style="cursor:pointer">AH SHOPPING</div>
-        <div class="user-profile">Seller Dashboard</div>
+        <nav>
+            <button onclick="location.href='upload.html'">Sell Item</button>
+            <button onclick="location.href='history.html'" title="View Transaction History">📜 History</button>
+            <button onclick="location.href='leaderboard.html'" title="Top Bidders">🏆 Leaderboard</button>
+            <button onclick="location.href='profile.html'" title="My Profile">👤 Profile</button>
+            <div class="user-profile">Seller Dashboard</div>
+        </nav>
     </header>
 
     <main class="upload-container">
@@ -108,9 +114,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
+    <script src="script.js"></script>
     <script>
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAITObyrVqlldNoKEckKmNoIJrmsUeEoVo",
             authDomain: "ah-shopping-7161d.firebaseapp.com",
@@ -121,12 +126,10 @@
             measurementId: "G-1M7NTWJNS2"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // DOM Elements
         const uploadForm = document.getElementById('uploadForm');
         const prodImage = document.getElementById('prodImage');
         const prodName = document.getElementById('prodName');
@@ -137,7 +140,6 @@
         const loadingOverlay = document.getElementById('loadingOverlay');
         const uploadError = document.getElementById('uploadError');
 
-        // Error display functions
         function showError(elementId, message) {
             const errorElement = document.getElementById(elementId);
             if (errorElement) {
@@ -157,19 +159,14 @@
 
         function validateImage(file) {
             if (!file) return 'Please select an image';
-            
-            // Check file type
             const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
             if (!validTypes.includes(file.type)) {
                 return 'Please select a valid image file (JPG, PNG, GIF, WEBP)';
             }
-            
-            // Check file size (5MB max)
-            const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+            const maxSize = 5 * 1024 * 1024;
             if (file.size > maxSize) {
                 return 'Image size should be less than 5MB';
             }
-            
             return null;
         }
 
@@ -177,7 +174,6 @@
             clearErrors();
             let isValid = true;
 
-            // Validate image
             const imageFile = prodImage.files[0];
             const imageError = validateImage(imageFile);
             if (imageError) {
@@ -185,7 +181,6 @@
                 isValid = false;
             }
 
-            // Validate name
             if (!prodName.value.trim()) {
                 showError('nameError', 'Product name is required');
                 isValid = false;
@@ -197,7 +192,6 @@
                 isValid = false;
             }
 
-            // Validate price
             const price = parseFloat(prodPrice.value);
             if (!prodPrice.value) {
                 showError('priceError', 'Starting bid is required');
@@ -210,7 +204,6 @@
                 isValid = false;
             }
 
-            // Validate category
             if (!prodCategory.value) {
                 showError('categoryError', 'Please select a category');
                 isValid = false;
@@ -219,22 +212,17 @@
             return isValid;
         }
 
-        // Process image and create auction
-        async function processImageAndCreateAuction(file, formData) {
+        function processImageAndCreateAuction(file, formData) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                
                 reader.onload = (ev) => {
                     const img = new Image();
-                    
                     img.onload = () => {
                         try {
                             const canvas = document.createElement('canvas');
                             let width = img.width;
                             let height = img.height;
                             const maxSize = 600;
-                            
-                            // Resize image if needed
                             if (width > height && width > maxSize) {
                                 height = (height * maxSize) / width;
                                 width = maxSize;
@@ -242,109 +230,69 @@
                                 width = (width * maxSize) / height;
                                 height = maxSize;
                             }
-                            
                             canvas.width = Math.round(width);
                             canvas.height = Math.round(height);
-                            
                             const ctx = canvas.getContext('2d');
                             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                            
-                            // Convert to base64 with compression
                             const compressedImage = canvas.toDataURL('image/jpeg', 0.8);
-                            
-                            // Create the auction document with ALL required fields
                             const auctionData = {
-                                // Core fields
                                 name: formData.name.trim(),
                                 price: parseFloat(formData.price),
                                 category: formData.category,
                                 description: formData.description ? formData.description.trim() : "",
                                 image: compressedImage,
-                                
-                                // Timestamps
                                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                                
-                                // Auction settings
-                                durationMs: 10800000, // 3 hours in milliseconds
-                                
-                                // Seller information
+                                durationMs: 10800000,
                                 sellerUid: auth.currentUser.uid,
                                 sellerEmail: auth.currentUser.email,
-                                
-                                // Bid tracking
                                 highestBidder: null,
                                 highestBidderUid: null,
                                 highestBidderEmail: null,
                                 bidCount: 0,
-                                
-                                // Status fields
                                 status: 'active',
                                 deleted: false,
-                                
-                                // Metadata
                                 createdAtISO: new Date().toISOString(),
                                 startingPrice: parseFloat(formData.price)
                             };
-                            
-                            console.log('Creating auction with data:', {
-                                ...auctionData,
-                                image: '[BASE64_IMAGE]' // Don't log the actual image data
-                            });
-                            
                             resolve(auctionData);
                         } catch (error) {
                             reject(new Error('Failed to process image: ' + error.message));
                         }
                     };
-                    
                     img.onerror = () => {
                         reject(new Error('Failed to load image. Please try another image.'));
                     };
-                    
                     img.src = ev.target.result;
                 };
-                
                 reader.onerror = () => {
                     reject(new Error('Failed to read image file'));
                 };
-                
                 reader.readAsDataURL(file);
             });
         }
 
-        // Handle form submission
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            // Validate form
-            if (!validateForm()) {
-                return;
-            }
-            
-            // Check if user is logged in
+            if (!validateForm()) return;
             if (!auth.currentUser) {
                 uploadError.textContent = 'You must be logged in to create an auction';
                 uploadError.style.display = 'block';
                 return;
             }
 
-            // Show loading overlay
             loadingOverlay.style.display = 'flex';
             submitBtn.disabled = true;
             submitBtn.style.opacity = '0.5';
             
             try {
-                // Check maintenance mode
                 const statusDoc = await db.collection("system").doc("status").get();
                 if (statusDoc.exists && statusDoc.data().maintenance) {
                     throw new Error('System is under maintenance. Please try again later.');
                 }
 
-                // Check if there's already an active auction
                 const now = new Date().getTime();
                 const productsSnapshot = await db.collection("products").get();
                 let activeAuction = false;
-                
                 productsSnapshot.forEach(doc => {
                     const p = doc.data();
                     const startTime = p.createdAt ? p.createdAt.toMillis() : now;
@@ -358,7 +306,6 @@
                     throw new Error('There is already an active auction. Please wait for it to complete before listing a new item.');
                 }
 
-                // Get form data
                 const formData = {
                     name: prodName.value,
                     price: prodPrice.value,
@@ -366,40 +313,25 @@
                     description: prodDesc.value
                 };
 
-                // Process image and prepare auction data
                 const auctionData = await processImageAndCreateAuction(prodImage.files[0], formData);
-
-                // Create the auction in Firestore
-                const docRef = await db.collection("products").add(auctionData);
+                await db.collection("products").add(auctionData);
                 
-                console.log('Auction created with ID:', docRef.id);
-                
-                // Show success message
                 showCustomAlert('Auction launched successfully!', 'success');
-                
-                // Redirect to home page
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 1500);
                 
             } catch (error) {
                 console.error('Error creating auction:', error);
-                
-                // Show error message
                 uploadError.textContent = error.message || 'Failed to create auction. Please try again.';
                 uploadError.style.display = 'block';
-                
-                // Hide loading overlay
                 loadingOverlay.style.display = 'none';
                 submitBtn.disabled = false;
                 submitBtn.style.opacity = '1';
-                
-                // Scroll to error message
                 uploadError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         });
 
-        // Custom alert function
         function showCustomAlert(message, type = 'info') {
             let container = document.getElementById('toast-container');
             if (!container) {
@@ -407,12 +339,10 @@
                 container.id = 'toast-container';
                 document.body.appendChild(container);
             }
-            
             const toast = document.createElement('div');
             toast.className = `custom-toast ${type}`;
             toast.innerHTML = `<span style="font-weight: 500;">${message}</span><button class="toast-close" onclick="this.parentElement.remove()">&times;</button>`;
             container.appendChild(toast);
-            
             setTimeout(() => {
                 if (toast && document.body.contains(toast)) {
                     toast.style.animation = 'fadeOutRight 0.4s forwards';
@@ -421,7 +351,6 @@
             }, 4000);
         }
 
-        // Real-time validation
         prodName.addEventListener('input', () => {
             const errorEl = document.getElementById('nameError');
             if (prodName.value.length >= 3 && prodName.value.length <= 100) {
@@ -454,12 +383,9 @@
             }
         });
 
-        // Check authentication on page load
         auth.onAuthStateChanged((user) => {
             if (!user) {
                 window.location.href = 'login.html';
-            } else {
-                console.log('User authenticated:', user.uid);
             }
         });
     </script>

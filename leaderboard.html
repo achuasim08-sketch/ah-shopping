@@ -9,7 +9,13 @@
 <body>
     <header>
         <div class="logo" onclick="location.href='index.html'" style="cursor:pointer">AH SHOPPING</div>
-        <div class="user-profile">Leaderboard 🏆</div>
+        <nav>
+            <button onclick="location.href='upload.html'">Sell Item</button>
+            <button onclick="location.href='history.html'" title="View Transaction History">📜 History</button>
+            <button onclick="location.href='leaderboard.html'" title="Top Bidders">🏆 Leaderboard</button>
+            <button onclick="location.href='profile.html'" title="My Profile">👤 Profile</button>
+            <div class="user-profile">Leaderboard 🏆</div>
+        </nav>
     </header>
 
     <main class="upload-container">
@@ -28,7 +34,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
     <script src="script.js"></script>
 </body>
 </html>
