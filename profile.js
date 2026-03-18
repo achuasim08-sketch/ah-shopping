@@ -176,3 +176,9 @@ window.resetPassword = function() {
             showCustomAlert('Error: ' + error.message, 'error');
         });
 };
+
+window.logout = function() {
+    auth.signOut().then(() => { 
+        window.location.href = 'login.html'; 
+    });
+};

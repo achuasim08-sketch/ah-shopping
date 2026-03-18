@@ -177,13 +177,12 @@ async function setupUserProfile(user) {
         
         profile.innerHTML = `
             ${isChampion ? '<span title="Top Winner" style="margin-right:8px; filter: drop-shadow(0 0 8px #ffd700); cursor:help;">👑</span>' : ''}
-            <span style="color:#2addef; font-weight:bold;">${displayName}</span> 
-            <button onclick="logout()" style="background:#ff4d4d; border:none; color:white; padding:5px 10px; margin-left:10px; cursor:pointer; border-radius:4px; font-weight:bold;">Logout</button>
+            <span style="color:#2addef; font-weight:bold;">${displayName}</span>
         `;
     } catch (e) {
         const username = await getUsernameByUid(user.uid);
         const displayName = username || user.email.split('@')[0];
-        profile.innerHTML = `<span style="color:#2addef; font-weight:bold;">${displayName}</span> <button onclick="logout()" style="background:#ff4d4d; border:none; color:white; padding:5px 10px; margin-left:10px; cursor:pointer; border-radius:4px; font-weight:bold;">Logout</button>`;
+        profile.innerHTML = `<span style="color:#2addef; font-weight:bold;">${displayName}</span>`;
     }
 }
 

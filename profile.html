@@ -64,6 +64,26 @@
             background: white;
             box-shadow: 0 0 15px rgba(42,221,241,0.5);
         }
+        .logout-btn {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-left: 15px;
+        }
+        .logout-btn:hover {
+            background: #ff3333;
+            box-shadow: 0 0 15px rgba(255, 77, 77, 0.5);
+        }
+        .button-group {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+        }
         .bids-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -143,7 +163,10 @@
                     <label>Shipping Address</label>
                     <textarea id="profileAddress" rows="3" required></textarea>
                 </div>
-                <button type="submit" class="update-btn">Update Profile</button>
+                <div class="button-group">
+                    <button type="submit" class="update-btn">Update Profile</button>
+                    <button type="button" onclick="logout()" class="logout-btn">Logout</button>
+                </div>
             </form>
             <div style="margin-top: 20px;">
                 <a href="#" onclick="resetPassword()" style="color: #2addef;">Change Password</a>
