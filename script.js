@@ -148,10 +148,28 @@ function initializePageLogic() {
 async function applyMaintenanceUI() {
     try {
         const statusDoc = await db.collection("system").doc("status").get();
-        if (statusDoc.exists && statusDoc.data().maintenance) {
-            document.body.classList.add('maintenance-active');
-        } else {
-            document.body.classList.remove('maintenance-active');
+        if (statusDoc.exists) {
+            const data = statusDoc.data();
+            const now = new Date().getTime();
+            
+            if (data.maintenance) {
+                if (data.maintenanceEndTime) {
+                    const endTime = data.maintenanceEndTime.toMillis();
+                    if (endTime > now) {
+                        document.body.classList.add('maintenance-active');
+                    } else {
+                        await db.collection("system").doc("status").update({
+                            maintenance: false,
+                            maintenanceEndTime: firebase.firestore.FieldValue.delete()
+                        });
+                        document.body.classList.remove('maintenance-active');
+                    }
+                } else {
+                    document.body.classList.add('maintenance-active');
+                }
+            } else {
+                document.body.classList.remove('maintenance-active');
+            }
         }
     } catch (e) { 
         console.error(e); 
@@ -828,5 +846,30 @@ async function checkAuctionCompletion() {
     }
 }
 
+async function checkMaintenanceExpiration() {
+    try {
+        const statusDoc = await db.collection("system").doc("status").get();
+        if (!statusDoc.exists) return;
+
+        const data = statusDoc.data();
+        if (!data.maintenance || !data.maintenanceEndTime) return;
+
+        const now = new Date().getTime();
+        const endTime = data.maintenanceEndTime.toMillis();
+
+        if (endTime <= now) {
+            await db.collection("system").doc("status").update({
+                maintenance: false,
+                maintenanceEndTime: firebase.firestore.FieldValue.delete()
+            });
+            console.log('Maintenance mode automatically disabled - timer expired');
+            showCustomAlert('System maintenance completed. All features are now available.', 'success');
+        }
+    } catch (error) {
+        console.error('Error checking maintenance expiration:', error);
+    }
+}
+
 setInterval(checkAuctionCompletion, 10000);
+setInterval(checkMaintenanceExpiration, 5000);
 document.addEventListener('DOMContentLoaded', checkAuctionCompletion);

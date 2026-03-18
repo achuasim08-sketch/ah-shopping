@@ -24,24 +24,46 @@
             background: #ff4d4d;
             color: white;
         }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .btn-loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body class="auth-body">
     <div class="auth-container">
         <div class="logo">AH SHOPPING ADMIN</div>
         <h2>Admin Login</h2>
+        
+        <div id="errorMessage" style="color: #ff4d4d; background: rgba(255,77,77,0.1); padding: 10px; border-radius: 5px; margin-bottom: 15px; display: none;"></div>
+        
         <form id="adminLoginForm">
             <div class="input-group">
                 <label>Email</label>
-                <input type="email" id="admin-email" required value="admin@gmail.com">
+                <input type="email" id="admin-email" required placeholder="Enter admin email" autocomplete="off">
             </div>
             <div class="input-group">
                 <label>Password</label>
-                <input type="password" id="admin-password" required value="admin123">
+                <input type="password" id="admin-password" required placeholder="Enter password" autocomplete="off">
             </div>
-            <button type="submit" class="submit-btn">Login as Admin</button>
+            <button type="submit" class="submit-btn" id="loginBtn">Login as Admin</button>
         </form>
-        <p style="color: #888; margin-top: 15px;">Authorized personnel only</p>
+        <p style="color: #888; margin-top: 15px; font-size: 0.8rem;">Authorized personnel only</p>
+        <p style="color: #555; margin-top: 5px; font-size: 0.7rem;">Contact system administrator for access</p>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -57,30 +79,155 @@
             appId: "1:941881580369:web:0ea5511eaa6cec86c6d170",
             measurementId: "G-1M7NTWJNS2"
         };
+        
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        const db = firebase.firestore();
 
-        document.getElementById('adminLoginForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('admin-email').value;
-            const password = document.getElementById('admin-password').value;
+        const loginForm = document.getElementById('adminLoginForm');
+        const emailInput = document.getElementById('admin-email');
+        const passwordInput = document.getElementById('admin-password');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMessage = document.getElementById('errorMessage');
 
-            // Set session persistence so admin session is tab‑isolated
-            auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
-                .then(() => {
-                    return auth.signInWithEmailAndPassword(email, password);
-                })
-                .then((userCredential) => {
-                    if (email === 'admin@gmail.com') {
-                        window.location.href = 'admin.html';
-                    } else {
-                        alert('Access denied: Not an admin account');
-                        auth.signOut();
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                loginBtn.innerHTML = '<span class="loading-spinner"></span> Authenticating...';
+                loginBtn.disabled = true;
+                loginBtn.classList.add('btn-loading');
+                emailInput.disabled = true;
+                passwordInput.disabled = true;
+            } else {
+                loginBtn.innerHTML = 'Login as Admin';
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('btn-loading');
+                emailInput.disabled = false;
+                passwordInput.disabled = false;
+            }
+        }
+
+        async function verifyAdminCredentials(email, password) {
+            try {
+                const adminDoc = await db.collection("admin").doc("credentials").get();
+                
+                if (adminDoc.exists) {
+                    const adminData = adminDoc.data();
+                    const adminEmail = adminData.email;
+                    
+                    if (email !== adminEmail) {
+                        return { valid: false, reason: 'email' };
                     }
-                })
-                .catch((error) => {
-                    alert('Login failed: ' + error.message);
-                });
+                    
+                    const validEmails = ['admin@gmail.com'];
+                    if (!validEmails.includes(email)) {
+                        return { valid: false, reason: 'email' };
+                    }
+                    
+                    return { valid: true };
+                } else {
+                    const validEmails = ['admin@gmail.com'];
+                    if (!validEmails.includes(email)) {
+                        return { valid: false, reason: 'email' };
+                    }
+                    return { valid: true };
+                }
+            } catch (error) {
+                console.error('Error verifying admin:', error);
+                const validEmails = ['admin@gmail.com'];
+                if (!validEmails.includes(email)) {
+                    return { valid: false, reason: 'email' };
+                }
+                return { valid: true };
+            }
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (!email || !password) {
+                showError('Please enter both email and password');
+                return;
+            }
+
+            setLoading(true);
+            errorMessage.style.display = 'none';
+
+            try {
+                const adminCheck = await verifyAdminCredentials(email, password);
+                
+                if (!adminCheck.valid) {
+                    if (adminCheck.reason === 'email') {
+                        showError('Invalid admin credentials');
+                    } else {
+                        showError('Invalid admin credentials');
+                    }
+                    setLoading(false);
+                    return;
+                }
+
+                auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
+                    .then(() => {
+                        return auth.signInWithEmailAndPassword(email, password);
+                    })
+                    .then(async (userCredential) => {
+                        const user = userCredential.user;
+                        
+                        const adminDoc = await db.collection("admin").doc("credentials").get();
+                        let adminEmail = 'admin@gmail.com';
+                        
+                        if (adminDoc.exists) {
+                            adminEmail = adminDoc.data().email;
+                        }
+                        
+                        if (user.email === adminEmail) {
+                            window.location.href = 'admin.html';
+                        } else {
+                            await auth.signOut();
+                            showError('Access denied: Not an admin account');
+                            setLoading(false);
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Login error:', error);
+                        
+                        let errorMsg = 'Login failed. Please try again.';
+                        if (error.code === 'auth/user-not-found') {
+                            errorMsg = 'Invalid admin credentials';
+                        } else if (error.code === 'auth/wrong-password') {
+                            errorMsg = 'Invalid admin credentials';
+                        } else if (error.code === 'auth/invalid-email') {
+                            errorMsg = 'Invalid email format';
+                        } else if (error.code === 'auth/too-many-requests') {
+                            errorMsg = 'Too many failed attempts. Please try again later.';
+                        }
+                        
+                        showError(errorMsg);
+                        setLoading(false);
+                    });
+            } catch (error) {
+                console.error('Login process error:', error);
+                showError('An error occurred. Please try again.');
+                setLoading(false);
+            }
+        });
+
+        emailInput.addEventListener('input', () => {
+            errorMessage.style.display = 'none';
+        });
+
+        passwordInput.addEventListener('input', () => {
+            errorMessage.style.display = 'none';
         });
     </script>
 </body>

@@ -5,6 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Control | AH SHOPPING</title>
     <link rel="stylesheet" href="style1.css">
+    <style>
+        .maintenance-settings {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .maintenance-settings h3 {
+            color: #ffd700;
+            margin-top: 0;
+        }
+        .time-input-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .time-input {
+            flex: 1;
+            min-width: 80px;
+        }
+        .time-input label {
+            display: block;
+            color: #ccc;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        .time-input input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #ffd700;
+            border-radius: 5px;
+            color: white;
+            font-size: 1rem;
+        }
+        .time-input input:focus {
+            outline: none;
+            border-color: #2addef;
+            box-shadow: 0 0 10px rgba(42,221,241,0.3);
+        }
+        .current-status {
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+        .countdown-timer {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            color: #ffd700;
+            font-weight: bold;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        .status-active {
+            background: #ff4d4d;
+            color: white;
+        }
+        .status-inactive {
+            background: #00ff00;
+            color: #111;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -25,17 +96,46 @@
                 <p style="font-size: 0.8rem; color: #888;">Wipes the leaderboard and all past sales records.</p>
             </div>
 
-            <button onclick="location.href='index.html'" class="submit-btn" style="margin-top: 40px; background: transparent; border: 1px solid #2addef; color: #2addef;">Back to Home</button>
-        
-             <button onclick="toggleMaintenance()" class="submit-btn" style="background: #ffd700; color: #111;">
-    🔄 Toggle Maintenance Mode
-</button>
+            <div class="maintenance-settings">
+                <h3>🔧 Maintenance Mode Control</h3>
+                
+                <div id="maintenanceStatus" class="current-status">
+                    Loading status...
+                </div>
+
+                <div class="time-input-group">
+                    <div class="time-input">
+                        <label>Hours</label>
+                        <input type="number" id="maintHours" min="0" max="72" value="0" placeholder="0">
+                    </div>
+                    <div class="time-input">
+                        <label>Minutes</label>
+                        <input type="number" id="maintMinutes" min="0" max="59" value="0" placeholder="0">
+                    </div>
+                    <div class="time-input">
+                        <label>Seconds</label>
+                        <input type="number" id="maintSeconds" min="0" max="59" value="0" placeholder="0">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="startMaintenanceWithTimer()" class="submit-btn" style="background: #ffd700; color: #111; flex: 2;">
+                        ⏰ Start Maintenance with Timer
+                    </button>
+                    <button onclick="toggleMaintenance()" class="submit-btn" style="background: #ff4d4d; color: white; flex: 1;">
+                        Toggle
+                    </button>
+                </div>
+                <p style="font-size: 0.8rem; color: #888; margin-top: 10px;">Set duration and click "Start Maintenance with Timer" to schedule automatic deactivation.</p>
+            </div>
+
+            <button onclick="location.href='index.html'" class="submit-btn" style="margin-top: 20px; background: transparent; border: 1px solid #2addef; color: #2addef;">Back to Home</button>
         </div>
     </main>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-<script src="admin.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="admin.js"></script>
 </body>
 </html>
