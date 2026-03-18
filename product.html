@@ -49,9 +49,120 @@
         }
         .owner { border: 1px solid #2addef; color: #2addef; }
         .closed { border: 1px solid #ff4d4d; color: #ff4d4d; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: rgba(43, 43, 43, 0.95);
+            border: 2px solid #ff4d4d;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255, 77, 77, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .modal-content h2 {
+            color: #ff4d4d;
+            margin-top: 0;
+            font-size: 1.8rem;
+        }
+        .modal-content p {
+            color: #ccc;
+            margin: 20px 0;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        .fee-amount {
+            font-size: 2.5rem;
+            color: #ff4d4d;
+            font-weight: bold;
+            text-shadow: 0 0 15px rgba(255, 77, 77, 0.5);
+            margin: 15px 0;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .pay-btn {
+            background: #ff4d4d;
+            color: white;
+        }
+        .pay-btn:hover {
+            background: #ff3333;
+            box-shadow: 0 0 20px rgba(255, 77, 77, 0.5);
+            transform: translateY(-2px);
+        }
+        .cancel-btn {
+            background: transparent;
+            border: 1px solid #888;
+            color: #888;
+        }
+        .cancel-btn:hover {
+            border-color: #ccc;
+            color: #ccc;
+        }
+        .info-text {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
+    <div class="modal" id="cancellationModal">
+        <div class="modal-content">
+            <h2>⚠️ Cancellation Fee Required</h2>
+            <p>Your auction "<span id="cancellationAuctionName" style="color: #2addef; font-weight: bold;"></span>" has been running for more than 1 hour.</p>
+            <p>To cancel this auction, you need to pay a penalty fee of:</p>
+            <div class="fee-amount">₹<span id="cancellationFeeAmount">1000</span></div>
+            <p style="color: #ffd700;">This fee is non-refundable and will be processed immediately.</p>
+            <div class="modal-buttons">
+                <button onclick="processCancellationWithPayment()" class="modal-btn pay-btn">
+                    💳 Pay & Cancel Auction
+                </button>
+                <button onclick="closeCancellationModal()" class="modal-btn cancel-btn">
+                    Go Back
+                </button>
+            </div>
+            <p class="info-text">The payment will be processed securely via EasyPayIO</p>
+            <p class="info-text" style="display: none;" id="cancellationAuctionId"></p>
+        </div>
+    </div>
+
     <header>
         <div class="logo" onclick="location.href='index.html'">AH SHOPPING</div>
         <nav>

@@ -16,7 +16,8 @@ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
 
 const FEES = {
     REGISTRATION: 500,
-    BID_INCREMENT: 500
+    BID_INCREMENT: 500,
+    CANCELLATION: 1000
 };
 
 const ADMIN_EMAIL = 'admin@gmail.com';
@@ -253,10 +254,66 @@ window.logout = function() {
     });
 };
 
+window.payCancellationFee = async function(auctionId, auctionName) {
+    const user = auth.currentUser;
+    if (!user) {
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    try {
+        if (window.EasyPayIO) {
+            EasyPayIO.pay({
+                amount: FEES.CANCELLATION,
+                productName: `Cancellation Fee - ${auctionName}`,
+                productDescription: `Auction cancellation penalty for ${auctionName}`,
+                userEmail: user.email,
+                onSuccess: async (response) => {
+                    console.log('Cancellation fee payment successful:', response);
+                    
+                    const cancellationRef = db.collection("cancellations").doc(`${auctionId}_${user.uid}`);
+                    await cancellationRef.set({
+                        auctionId: auctionId,
+                        auctionName: auctionName,
+                        userId: user.uid,
+                        userEmail: user.email,
+                        feeAmount: FEES.CANCELLATION,
+                        paidAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        status: 'paid',
+                        transactionId: response.transactionId || 'txn_' + Date.now()
+                    });
+                    
+                    const productRef = db.collection("products").doc(auctionId);
+                    await productRef.update({
+                        status: 'cancelled',
+                        deleted: true,
+                        cancelledAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        cancellationFee: FEES.CANCELLATION,
+                        cancellationTransactionId: response.transactionId
+                    });
+                    
+                    showCustomAlert(`Auction cancelled successfully. Cancellation fee of ₹${FEES.CANCELLATION} has been charged.`, 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                },
+                onFailure: (error) => {
+                    console.error('Cancellation fee payment failed:', error);
+                    showCustomAlert('Cancellation fee payment failed. Auction not cancelled.', 'error');
+                }
+            });
+        } else {
+            showCustomAlert('Payment system not available. Please try again.', 'error');
+        }
+    } catch (error) {
+        console.error("Error processing cancellation fee:", error);
+        showCustomAlert("Error processing cancellation fee: " + error.message, "error");
+    }
+};
+
 window.cancelAuction = async function(id) {
     try {
-        if (!confirm("Are you sure you want to cancel this auction? This action cannot be undone!")) return;
-        
         const productRef = db.collection("products").doc(id);
         const productDoc = await productRef.get();
         
@@ -272,16 +329,63 @@ window.cancelAuction = async function(id) {
             throw new Error("You are not authorized to cancel this auction.");
         }
 
-        await productRef.update({
-            status: 'cancelled',
-            deleted: true
-        });
+        const now = new Date().getTime();
+        const startTime = product.createdAt ? product.createdAt.toMillis() : now;
+        const auctionAge = now - startTime;
+        const oneHourMs = 60 * 60 * 1000;
 
-        showCustomAlert("Auction cancelled successfully!", "success");
-        window.location.href = "index.html";
+        if (auctionAge > oneHourMs) {
+            const modal = document.getElementById('cancellationModal');
+            const auctionNameSpan = document.getElementById('cancellationAuctionName');
+            const auctionIdSpan = document.getElementById('cancellationAuctionId');
+            const feeAmountSpan = document.getElementById('cancellationFeeAmount');
+            
+            if (modal && auctionNameSpan && auctionIdSpan && feeAmountSpan) {
+                auctionNameSpan.textContent = product.name;
+                auctionIdSpan.textContent = id;
+                feeAmountSpan.textContent = FEES.CANCELLATION;
+                modal.style.display = 'flex';
+                return;
+            } else {
+                if (confirm(`This auction has been running for more than 1 hour. Cancelling will require a fee of ₹${FEES.CANCELLATION}. Do you want to proceed with payment?`)) {
+                    await payCancellationFee(id, product.name);
+                }
+                return;
+            }
+        }
+
+        if (confirm("Are you sure you want to cancel this auction? This action cannot be undone!")) {
+            await productRef.update({
+                status: 'cancelled',
+                deleted: true,
+                cancelledAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            showCustomAlert("Auction cancelled successfully!", "success");
+            window.location.href = "index.html";
+        }
     } catch (e) {
         console.error("Error cancelling auction:", e);
         showCustomAlert("Error cancelling auction: " + e.message, "error");
+    }
+};
+
+window.processCancellationWithPayment = async function() {
+    const auctionId = document.getElementById('cancellationAuctionId').textContent;
+    const auctionName = document.getElementById('cancellationAuctionName').textContent;
+    
+    const modal = document.getElementById('cancellationModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    
+    await payCancellationFee(auctionId, auctionName);
+};
+
+window.closeCancellationModal = function() {
+    const modal = document.getElementById('cancellationModal');
+    if (modal) {
+        modal.style.display = 'none';
     }
 };
 
