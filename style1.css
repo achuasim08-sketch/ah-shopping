@@ -547,3 +547,6 @@ nav button:hover {
     50% { opacity: 1; }
     100% { opacity: 0.6; }
 }
+#cart-icon-container:hover {
+    transform: scale(1.1);
+}

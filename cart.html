@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart | AH SHOPPING</title>
+    <link rel="stylesheet" href="style1.css">
+    <style>
+        .cart-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .cart-item {
+            background: rgba(43, 43, 43, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid #2addef;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .cart-item h3 {
+            margin: 0 0 10px 0;
+            color: #2addef;
+        }
+        .cart-item .price {
+            font-size: 1.5rem;
+            color: #00ff00;
+        }
+        .pay-now {
+            background: #00ff00;
+            color: #111;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .pay-now:hover {
+            background: white;
+            box-shadow: 0 0 15px #00ff00;
+        }
+        .empty-msg {
+            text-align: center;
+            color: #888;
+            padding: 50px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo" onclick="location.href='index.html'">AH SHOPPING</div>
+        <nav>
+            <button onclick="location.href='upload.html'">Sell Item</button>
+            <button onclick="location.href='history.html'" title="Transaction History">📜 History</button>
+            <button onclick="location.href='leaderboard.html'" title="Top Bidders">🏆 Leaderboard</button>
+            <button onclick="location.href='profile.html'" title="My Profile">👤 Profile</button>
+            <div class="user-profile">Your Cart</div>
+        </nav>
+    </header>
+
+    <main class="upload-container">
+        <div style="width: 100%; max-width: 900px;">
+            <h2 style="color: #2addef; text-align: center;">Items Awaiting Payment</h2>
+            <div id="cartItems" class="cart-grid">
+                <p class="empty-msg">Loading...</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="script.js"></script>
+    <script src="cart.js"></script>
+</body>
+</html>

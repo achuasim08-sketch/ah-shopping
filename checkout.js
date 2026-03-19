@@ -226,6 +226,8 @@ async function handlePaymentSuccess(response) {
             transactionId: response.transactionId
         });
 
+        await markPendingPaymentAsPaid(productId, user.uid);
+
         paymentLoading.style.display = 'none';
 
         showCustomAlert('Payment successful! Redirecting to history...', 'success');
@@ -263,6 +265,18 @@ function showError(message) {
             <p>Redirecting to home page...</p>
         </div>
     `;
+}
+
+async function markPendingPaymentAsPaid(productId, userId) {
+    const snapshot = await db.collection('pending_payments')
+        .where('userId', '==', userId)
+        .where('productId', '==', productId)
+        .where('paid', '==', false)
+        .get();
+    
+    snapshot.forEach(async doc => {
+        await doc.ref.update({ paid: true, paidAt: firebase.firestore.FieldValue.serverTimestamp() });
+    });
 }
 
 window.addEventListener('easypayio:payment:success', (event) => {
